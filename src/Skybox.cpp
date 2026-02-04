@@ -5,9 +5,7 @@
 #include "stb_image.h"
 
 
-// スカイボックスの頂点データ
 float skyboxVertices[] = {
-    // positions          
     -1.0f,  1.0f, -1.0f,
     -1.0f, -1.0f, -1.0f,
      1.0f, -1.0f, -1.0f,
@@ -114,18 +112,17 @@ unsigned int Skybox::loadCubemap(const std::vector<std::string>& faces) {
 
 
 void Skybox::draw(const Mat4& view, const Mat4& projection) {
-    glDepthFunc(GL_LEQUAL);  // Change depth function so depth test passes when values are equal to depth buffer's content
+    glDepthFunc(GL_LEQUAL);
     
     _skyboxShader.use();
     _skyboxShader.setMat4("view", view.m);
     _skyboxShader.setMat4("projection", projection.m);
 
-    // skybox cube
     glBindVertexArray(_vao);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, _cubemapTexture);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
     
-    glDepthFunc(GL_LESS); // Set depth function back to default
+    glDepthFunc(GL_LESS);
 }

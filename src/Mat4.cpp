@@ -21,14 +21,23 @@ Mat4::Mat4(const Mat4& other){
 
 Mat4 Mat4::scale(const float s) const {
     Mat4 m;
-    for (int i = 0; i < 4; ++i) {
-        m[i][i] = s;
-    }
+    m[0][0] = s;
+    m[1][1] = s;
+    m[2][2] = s;
     return *this * m;
 }
 
+Mat4 Mat4::scale(const Vec3& s) const {
+    Mat4 m;
+    m[0][0] = s.x;
+    m[1][1] = s.y;
+    m[2][2] = s.z;
+    return *this * m;
+}
+
+
 Mat4 Mat4::translate(const Vec3& translation) const {
-    Mat4 translationMatrix; // Starts as identity
+    Mat4 translationMatrix; 
     translationMatrix[3][0] = translation.x;
     translationMatrix[3][1] = translation.y;
     translationMatrix[3][2] = translation.z;

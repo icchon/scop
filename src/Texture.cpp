@@ -8,12 +8,11 @@ Texture::Texture(const std::string& path)
     : _ID(0), _filePath(path), _localBuffer(nullptr), _width(0), _height(0), _BPP(0) {
     
     stbi_set_flip_vertically_on_load(1);
-    _localBuffer = stbi_load(path.c_str(), &_width, &_height, &_BPP, 4); // Load 4 channels (RGBA)
+    _localBuffer = stbi_load(path.c_str(), &_width, &_height, &_BPP, 4);
 
     glGenTextures(1, &_ID);
     glBindTexture(GL_TEXTURE_2D, _ID);
 
-    // Set texture parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -27,7 +26,7 @@ Texture::Texture(const std::string& path)
         std::cerr << "Error: Failed to load texture '" << path << "'" << std::endl;
     }
 
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind
+    glBindTexture(GL_TEXTURE_2D, 0); 
 }
 
 Texture::~Texture() {

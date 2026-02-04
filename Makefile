@@ -6,13 +6,13 @@ CXXFLAGS:= -Wall -Wextra -Werror -std=c++11 -I./includes
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
-    LIBS := -lglfw -lGL -lGLEW
+    LIBS := -lglfw -lGL -lglew
 else ifeq ($(UNAME_S), Darwin)
     LIBS := -lglfw -framework OpenGL -lglew
 endif
 
 $(NAME): $(OBJS)
-	$(CXX) $(OBJS) $(LIBS) -o $(NAME)
+	$(CXX) -o $(NAME) $(OBJS) $(LIBS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

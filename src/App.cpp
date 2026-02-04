@@ -5,9 +5,10 @@
 #include <memory>
 #include <map>
 
-App::App()
-    : _window(800, 600, "Scop"),
-      _scene("shaders/normal.vert", "shaders/normal.frag"),
+App::App(const AppConfig& config)
+    : _config(config),
+      _window(config.window_width, config.window_height, config.window_title.c_str()),
+      _scene(),
       _last_time(0.0),
       _t_key_state(GLFW_RELEASE),
       _texture_target_state(1)
@@ -15,6 +16,10 @@ App::App()
     if (!_window.isOpen()) {
         throw std::runtime_error("Failed to create window");
     }
+    // Initialize scene with shaders and projection matrix
+    _scene.init(_config.window_width, _config.window_height, 
+                _config.shader_vertex_path, _config.shader_fragment_path);
+
     loadAssets();
     _last_time = glfwGetTime();
 }
@@ -27,40 +32,48 @@ void App::loadAssets() {
     std::map<std::string, std::shared_ptr<Mesh>> loadedMeshes;
     std::map<std::string, std::shared_ptr<Texture>> loadedTextures;
 
-    std::vector<ObjectConfig> configs = {
-        { "objects/low_poly_tree/Lowpoly_tree_sample.obj", "textures/tree.png", Vec3(-1.5f, 0.0f, 0.0f), Vec3(0,1,0), 0.0f },
-        // { "objects/85-cottage_obj/cottage_obj.obj", "objects/96_city/textures/download.jpg", Vec3(1.5f, -0.4f, 0.0f), Vec3(0,1,0), -90.0f },
-        // { "objects/bugatti/bugatti.obj", "objects/96_city/textures/download.jpg", Vec3(0.0f, -0.4f, -3.0f), Vec3(0,1,0), 45.0f }
-    };
-
-    for (const auto& config : configs) {
+    if (!_config.skybox_path.empty()) {
         try {
-            if (loadedMeshes.find(config.objPath) == loadedMeshes.end()) {
-                ParsedData data = parser->parse(config.objPath);
+            _scene.setSkybox(_config.skybox_path);
+        } catch (const std::exception& e) {
+            std::cerr << "Error loading skybox: " << e.what() << std::endl;
+        }
+    }
+
+    for (const auto& obj_config : _config.objects) {
+        try {
+            if (loadedMeshes.find(obj_config.path) == loadedMeshes.end()) {
+                ParsedData data = parser->parse(obj_config.path);
                 auto mesh = std::make_shared<Mesh>(data.vertices, data.indices);
                 mesh->normalize();
-                loadedMeshes[config.objPath] = mesh;
+                loadedMeshes[obj_config.path] = mesh;
             }
 
-            if (loadedTextures.find(config.texturePath) == loadedTextures.end()) {
-                std::cout << "Loading texture: '" << config.texturePath << "'" << std::endl;
-                loadedTextures[config.texturePath] = std::make_shared<Texture>(config.texturePath);
+            if (loadedTextures.find(obj_config.texture) == loadedTextures.end()) {
+                std::cout << "Loading texture: '" << obj_config.texture << "'" << std::endl;
+                loadedTextures[obj_config.texture] = std::make_shared<Texture>(obj_config.texture);
             }
 
             Mat4 model_matrix;
-            model_matrix = model_matrix.translate(config.position);
-            if (config.rotation_angle_deg != 0.0f) {
-                 model_matrix = model_matrix.rotate(config.rotation_angle_deg * (M_PI / 180.0f), config.rotation_axis);
-            }
+            model_matrix = model_matrix.translate(obj_config.position);
+            
+            if (obj_config.rotation.z != 0.0f)
+                 model_matrix = model_matrix.rotate(obj_config.rotation.z * (M_PI / 180.0f), Vec3(0, 0, 1));
+            if (obj_config.rotation.y != 0.0f)
+                 model_matrix = model_matrix.rotate(obj_config.rotation.y * (M_PI / 180.0f), Vec3(0, 1, 0));
+            if (obj_config.rotation.x != 0.0f)
+                 model_matrix = model_matrix.rotate(obj_config.rotation.x * (M_PI / 180.0f), Vec3(1, 0, 0));
+
+            model_matrix = model_matrix.scale(obj_config.scale);
 
             _scene.addObject(GameObject(
-                loadedMeshes[config.objPath],
-                loadedTextures[config.texturePath],
+                loadedMeshes[obj_config.path],
+                loadedTextures[obj_config.texture],
                 model_matrix
             ));
 
         } catch(const std::exception& e) {
-            std::cerr << "Error loading object " << config.objPath << ": " << e.what() << std::endl;
+            std::cerr << "Error loading object " << obj_config.path << ": " << e.what() << std::endl;
         }
     }
     delete parser;
@@ -82,13 +95,13 @@ void App::processInput(float delta_time) {
     _window.pollEvents();
 
     if(_window.getKey(GLFW_KEY_W) == GLFW_PRESS)
-        _scene.getCamera().move(CameraDirection::FORWARD, CAMERA_SPEED * delta_time);
+        _scene.getCamera().move(CameraDirection::FORWARD, _config.camera_speed * delta_time);
     if(_window.getKey(GLFW_KEY_S) == GLFW_PRESS)
-        _scene.getCamera().move(CameraDirection::BACKWARD, CAMERA_SPEED * delta_time);
+        _scene.getCamera().move(CameraDirection::BACKWARD, _config.camera_speed * delta_time);
     if(_window.getKey(GLFW_KEY_A) == GLFW_PRESS)
-        _scene.getCamera().move(CameraDirection::LEFT, CAMERA_SPEED * delta_time);
+        _scene.getCamera().move(CameraDirection::LEFT, _config.camera_speed * delta_time);
     if(_window.getKey(GLFW_KEY_D) == GLFW_PRESS)
-        _scene.getCamera().move(CameraDirection::RIGHT, CAMERA_SPEED * delta_time);
+        _scene.getCamera().move(CameraDirection::RIGHT, _config.camera_speed * delta_time);
 
     float yaw_offset = 0.0f;
     float pitch_offset = 0.0f;
