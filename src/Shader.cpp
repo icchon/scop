@@ -1,5 +1,7 @@
 
 #include "Shader.hpp"
+#include <vector>
+
 static std::string shaderPathToString(const std::string &shaderPath);
 static GLuint compileShader(const std::string &shaderRaw, GLenum type);
 

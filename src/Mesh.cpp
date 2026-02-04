@@ -1,5 +1,5 @@
 #include "Mesh.hpp"
-
+#include <algorithm>
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices): _vertices(vertices), _indices(indices) {
     glGenVertexArrays(1, &_VAO);
