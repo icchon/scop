@@ -11,7 +11,7 @@ else ifeq ($(UNAME_S), Darwin)
     LIBS := -lglfw -framework OpenGL -lglew
 endif
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) shader get
 	$(CXX) -o $(NAME) $(OBJS) $(LIBS)
 
 %.o: %.cpp
