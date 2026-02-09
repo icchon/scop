@@ -17,6 +17,13 @@ $(NAME): $(OBJS)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+shader:
+	chmod +rwx shaders/*
+
+get:
+	wget https://cdn.intra.42.fr/document/document/34765/resources.tgz
+	tar -zxvf resources.tgz
+
 all: $(NAME)
 
 clean:

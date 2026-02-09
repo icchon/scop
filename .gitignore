@@ -41,3 +41,6 @@ scop
 .DS_Store
 objects/
 *.mov
+
+resources.tgz
+resources/

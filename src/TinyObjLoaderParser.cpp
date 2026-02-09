@@ -4,13 +4,30 @@
 #include "TinyObjLoaderParser.hpp"
 #include <unordered_map>
 #include <iostream>
+#include <unistd.h> // for getcwd
+#include <limits.h> // for PATH_MAX
 
 ParsedData TinyObjLoaderParser::parse(const std::string& filepath) {
+    char currentPath[PATH_MAX];
+    if (getcwd(currentPath, sizeof(currentPath)) == nullptr) {
+        throw std::runtime_error("Failed to get current working directory for obj parsing.");
+    }
+    std::string currentPathStr = std::string(currentPath);
+
+    std::string projectRootPath = currentPathStr;
+    std::string resource_suffix = "/resources";
+    if (currentPathStr.length() >= resource_suffix.length() && 
+        currentPathStr.substr(currentPathStr.length() - resource_suffix.length()) == resource_suffix) {
+        projectRootPath = currentPathStr.substr(0, currentPathStr.length() - resource_suffix.length());
+    }
+
+    std::string absoluteFilepath = projectRootPath + "/" + filepath;
+
     tinyobj::ObjReader reader;
     tinyobj::ObjReaderConfig reader_config;
     reader_config.vertex_color = false;
     
-    if (!reader.ParseFromFile(filepath, reader_config)) {
+    if (!reader.ParseFromFile(absoluteFilepath, reader_config)) { // 絶対パスを使用
         throw std::runtime_error("TinyObjReader: " + reader.Error());
     }
 

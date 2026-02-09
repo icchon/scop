@@ -1,5 +1,7 @@
 #include "Texture.hpp"
 #include <iostream>
+#include <unistd.h> // for getcwd
+#include <limits.h> // for PATH_MAX
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -7,8 +9,24 @@
 Texture::Texture(const std::string& path)
     : _ID(0), _filePath(path), _localBuffer(nullptr), _width(0), _height(0), _BPP(0) {
     
+    char currentPath[PATH_MAX];
+    if (getcwd(currentPath, sizeof(currentPath)) == nullptr) {
+        std::cerr << "Failed to get current working directory for texture loading." << std::endl;
+        return;
+    }
+    std::string currentPathStr = std::string(currentPath);
+
+    std::string projectRootPath = currentPathStr;
+    std::string resource_suffix = "/resources";
+    if (currentPathStr.length() >= resource_suffix.length() && 
+        currentPathStr.substr(currentPathStr.length() - resource_suffix.length()) == resource_suffix) {
+        projectRootPath = currentPathStr.substr(0, currentPathStr.length() - resource_suffix.length());
+    }
+
+    std::string absolutePath = projectRootPath + "/" + path;
+
     stbi_set_flip_vertically_on_load(1);
-    _localBuffer = stbi_load(path.c_str(), &_width, &_height, &_BPP, 4);
+    _localBuffer = stbi_load(absolutePath.c_str(), &_width, &_height, &_BPP, 4); // 絶対パスを使用
 
     glGenTextures(1, &_ID);
     glBindTexture(GL_TEXTURE_2D, _ID);
@@ -23,7 +41,7 @@ Texture::Texture(const std::string& path)
         glGenerateMipmap(GL_TEXTURE_2D);
         stbi_image_free(_localBuffer);
     } else {
-        std::cerr << "Error: Failed to load texture '" << path << "'" << std::endl;
+        std::cerr << "Error: Failed to load texture '" << absolutePath << "'" << std::endl; // エラーメッセージも絶対パスに
     }
 
     glBindTexture(GL_TEXTURE_2D, 0); 

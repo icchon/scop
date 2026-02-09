@@ -5,6 +5,10 @@
 #include "Shader.hpp"
 #include "Camera.hpp"
 #include "Mat4.hpp"
+#include <fstream>    // for std::ifstream
+#include <iostream>   // for std::cerr
+#include <unistd.h>   // for getcwd
+#include <limits.h>   // for PATH_MAX
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -33,6 +37,19 @@ public:
     }
     
     void setSkybox(const std::string& path) {
+        char currentPath[PATH_MAX];
+        if (getcwd(currentPath, sizeof(currentPath)) == nullptr) {
+            throw std::runtime_error("Failed to get current working directory for skybox.");
+        }
+        std::string currentPathStr = std::string(currentPath);
+
+        std::string projectRootPath = currentPathStr;
+        std::string resource_suffix = "/resources";
+        if (currentPathStr.length() >= resource_suffix.length() && 
+            currentPathStr.substr(currentPathStr.length() - resource_suffix.length()) == resource_suffix) {
+            projectRootPath = currentPathStr.substr(0, currentPathStr.length() - resource_suffix.length());
+        }
+
         const std::vector<std::string> face_names = {"posx", "negx", "posy", "negy", "posz", "negz"};
         const std::vector<std::string> extensions = {".jpg", ".bmp", ".png"};
         std::vector<std::string> final_faces;
@@ -40,10 +57,12 @@ public:
         for (const auto& face_name : face_names) {
             bool found = false;
             for (const auto& ext : extensions) {
-                std::string full_path = path + "/" + face_name + ext;
-                std::ifstream f(full_path.c_str());
+                std::string full_path = path + "/" + face_name + ext; // relative path from config
+                std::string absolutePath = projectRootPath + "/" + full_path; // combined absolute path
+
+                std::ifstream f(absolutePath.c_str());
                 if (f.good()) {
-                    final_faces.push_back(full_path);
+                    final_faces.push_back(absolutePath); // Absolute path for Skybox constructor
                     found = true;
                     break;
                 }

@@ -1,6 +1,12 @@
 
 #include "Shader.hpp"
 #include <vector>
+#include <iostream>   // for std::cerr
+#include <string>     // for std::string
+#include <fstream>    // for std::ifstream
+#include <sstream>    // for std::stringstream
+#include <unistd.h>   // for getcwd
+#include <limits.h>   // for PATH_MAX
 
 static std::string shaderPathToString(const std::string &shaderPath);
 static GLuint compileShader(const std::string &shaderRaw, GLenum type);
@@ -42,10 +48,26 @@ Shader::~Shader()
 
 static std::string shaderPathToString(const std::string &shaderPath)
 {
-    std::ifstream fs(shaderPath);
+    char currentPath[PATH_MAX];
+    if (getcwd(currentPath, sizeof(currentPath)) == nullptr) {
+        std::cerr << "Failed to get current working directory." << std::endl;
+        return "";
+    }
+    std::string currentPathStr = std::string(currentPath);
+
+    std::string projectRootPath = currentPathStr;
+    std::string resource_suffix = "/resources";
+    if (currentPathStr.length() >= resource_suffix.length() && 
+        currentPathStr.substr(currentPathStr.length() - resource_suffix.length()) == resource_suffix) {
+        projectRootPath = currentPathStr.substr(0, currentPathStr.length() - resource_suffix.length());
+    }
+    
+    std::string absolutePath = projectRootPath + "/" + shaderPath;
+
+    std::ifstream fs(absolutePath);
     if (!fs.is_open())
     {
-        std::cerr << "Failed to open shader file: " << shaderPath << std::endl;
+        std::cerr << "Failed to open shader file (absolute path): " << absolutePath << std::endl;
         return "";
     }
     std::stringstream ss;

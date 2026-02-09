@@ -4,6 +4,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <unistd.h> // for getcwd
+#include <limits.h> // for PATH_MAX
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
