@@ -11,16 +11,13 @@ else ifeq ($(UNAME_S), Darwin)
     LIBS := -lglfw -framework OpenGL -lglew
 endif
 
-$(NAME): $(OBJS) shader get
+$(NAME): $(OBJS)
 	$(CXX) -o $(NAME) $(OBJS) $(LIBS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-shader:
-	chmod +rwx shaders/*
-
-get:
+resource:
 	wget https://cdn.intra.42.fr/document/document/34765/resources.tgz
 	tar -zxvf resources.tgz
 
