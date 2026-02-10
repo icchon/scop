@@ -42,5 +42,4 @@ scop
 objects/
 *.mov
 
-resources.tgz
-resources/
+resources*
