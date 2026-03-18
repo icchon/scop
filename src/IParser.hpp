@@ -1,5 +1,6 @@
 #pragma once
 #include "Mesh.hpp"
+#include <string>
 
 struct ParsedData {
     std::vector<Vertex> vertices;
