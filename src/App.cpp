@@ -1,5 +1,5 @@
 #include "App.hpp"
-#include "TinyObjLoaderParser.hpp"
+#include "ObjParser.hpp"
 #include "Camera.hpp"
 #include <iostream>
 #include <memory>
@@ -28,7 +28,7 @@ App::~App() {
 }
 
 void App::loadAssets() {
-    IParser* parser = new TinyObjLoaderParser();
+    IParser* parser = new ObjParser();
     std::map<std::string, std::shared_ptr<Mesh>> loadedMeshes;
     std::map<std::string, std::shared_ptr<Texture>> loadedTextures;
 
