@@ -19,7 +19,7 @@ $(NAME): $(OBJS) resource
 
 resource:
 	wget https://cdn.intra.42.fr/document/document/34765/resources.tgz
-	tar -zxvf resources.tgz
+	tar -xvf resources.tgz || zcat resources.tgz | zcat | tar -xvf -
 
 all: $(NAME)
 
