@@ -3,6 +3,7 @@ SRCS    := $(wildcard src/*.cpp)
 OBJS    := $(SRCS:.cpp=.o)
 CXX     := c++
 CXXFLAGS:= -Wall -Wextra -Werror -std=c++11 -I./includes
+FILE_ID := 1XzxqU4xciSvwcM4-2pJz2JLy8T6gl7lR
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
@@ -23,7 +24,7 @@ resource:
 # 		tar -xvf resources.tgz || zcat resources.tgz | zcat | tar -xvf -; \
 # 	fi
 	if [ ! -d "resources" ]; then \
-		wget https://drive.google.com/file/d/1XzxqU4xciSvwcM4-2pJz2JLy8T6gl7lR resources.zip; \
+		wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=$(FILE_ID)' -O resources.zip; \
 		unzip resources.zip; \
 	fi
 
