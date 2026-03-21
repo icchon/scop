@@ -71,6 +71,21 @@ void App::loadAssets() {
             ParsedData data = parser->parse(obj_config.path);
             data.normalize();
 
+            // Calculate group-wide bounding box after normalization
+            Vec3 groupMin(1e9f, 1e9f, 1e9f), groupMax(-1e9f, -1e9f, -1e9f);
+            bool hasVertices = false;
+            for (const auto& mData : data.meshes) {
+                for (const auto& v : mData.vertices) {
+                    groupMin.x = std::min(groupMin.x, v.pos[0]);
+                    groupMin.y = std::min(groupMin.y, v.pos[1]);
+                    groupMin.z = std::min(groupMin.z, v.pos[2]);
+                    groupMax.x = std::max(groupMax.x, v.pos[0]);
+                    groupMax.y = std::max(groupMax.y, v.pos[1]);
+                    groupMax.z = std::max(groupMax.z, v.pos[2]);
+                    hasVertices = true;
+                }
+            }
+
             std::string objDir = "";
             size_t lastSlash = obj_config.path.find_last_of("/\\");
             if (lastSlash != std::string::npos) {
@@ -107,6 +122,10 @@ void App::loadAssets() {
                     obj_config.rotation,
                     obj_config.scale
                 );
+                if (hasVertices) {
+                    object.min_local_group = groupMin;
+                    object.max_local_group = groupMax;
+                }
                 object.material = mData.material;
                 object.groupId = currentGroupId;
                 _scene.addObject(object);

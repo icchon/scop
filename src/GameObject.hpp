@@ -23,6 +23,7 @@ public:
     ~GameObject() = default;
 
     Vec3 min_local, max_local;
+    Vec3 min_local_group, max_local_group;
 
     void calculateBoundingBox() {
         if (mesh && !mesh->getVertices().empty()) {
@@ -38,6 +39,9 @@ public:
                 max_local.z = std::max(max_local.z, v.pos[2]);
             }
         }
+        // Initialize group bounding box with local one
+        min_local_group = min_local;
+        max_local_group = max_local;
     }
 
     bool intersectsRay(const Vec3& ray_origin, const Vec3& ray_dir, float& distance) {
@@ -79,9 +83,9 @@ public:
             position += velocity * delta_time;
 
             // Ground Collision (y=0) with Bouncing
-            float bottom_y = position.y + min_local.y * scale;
+            float bottom_y = position.y + min_local_group.y * scale;
             if (bottom_y < 0.0f) {
-                position.y = -min_local.y * scale; 
+                position.y = -min_local_group.y * scale; 
                 
                 // Bounce: reverse velocity and apply restitution
                 const float restitution = 0.5f;
