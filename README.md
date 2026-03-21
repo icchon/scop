@@ -9,8 +9,10 @@
 
 </p>
 
-![demo1](./docs/demo1.png)
 ![demo2](./docs/demo2.gif)
+![demo3](./docs/demo3.png)
+![demo4](./docs/demo4.png)
+![demo5](./docs/demo5.png)
 
 <br>
 
