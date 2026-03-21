@@ -160,6 +160,11 @@ ParsedData ObjParser::parse(const std::string& filepath) {
                     vert.normalColor[1] = nCol[1];
                     vert.normalColor[2] = nCol[2];
 
+                    // Assign actual normal for lighting
+                    vert.normal[0] = normal.x;
+                    vert.normal[1] = normal.y;
+                    vert.normal[2] = normal.z;
+
                     // If the file has vertex colors, use them, otherwise use the face color
                     if (colors.size() > (size_t)(3 * triangle[j].v + 2)) {
                         vert.color[0] = colors[3 * triangle[j].v + 0];

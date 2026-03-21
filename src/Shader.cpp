@@ -137,7 +137,17 @@ void Shader::setFloat(const std::string& name, float value) const
     GLint location = glGetUniformLocation(ID, name.c_str());
     if (location == -1)
     {
-        std::cerr << "Warning: uniform '" << name << "' doesn't exist!" << std::endl;
+        // Suppress warning if not found to reduce noise during runtime
     }
     glUniform1f(location, value);
+}
+
+void Shader::setVec3(const std::string& name, float x, float y, float z) const
+{
+    GLint location = glGetUniformLocation(ID, name.c_str());
+    if (location == -1)
+    {
+        // Suppress warning if not found to reduce noise during runtime
+    }
+    glUniform3f(location, x, y, z);
 }

@@ -82,11 +82,16 @@ public:
         _mainShader->setFloat("u_TextureMixFactor", _texture_mix_factor);
         _mainShader->setInt("u_ColorMode", _color_mode);
         
+        // Light setup: coming from top-right-back
+        _mainShader->setVec3("u_LightDir", -1.0f, -1.0f, -1.0f);
+        _mainShader->setVec3("u_LightColor", 1.0f, 1.0f, 1.0f);
+        
         Mat4 viewMatrix = _camera.getViewMatrix();
         
         for(auto& object: _objects){
             Mat4 transform = _projection * viewMatrix * object.model_matrix;
             _mainShader->setMat4("transform", transform.m);
+            _mainShader->setMat4("model", object.model_matrix.m);
             object.texture->bind();
             object.mesh->draw();
         }
