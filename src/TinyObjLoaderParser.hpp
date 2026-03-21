@@ -3,5 +3,6 @@
 
 class TinyObjLoaderParser : public IParser {
 public:
-    ParsedData parse(const std::string& filePath) override;
+    virtual ~TinyObjLoaderParser() = default;
+    virtual ParsedData parse(const std::string& filePath) override;
 };

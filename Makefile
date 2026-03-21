@@ -18,9 +18,13 @@ $(NAME): $(OBJS) resource
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 resource:
+# 	if [ ! -d "resources" ]; then \
+# 		wget https://cdn.intra.42.fr/document/document/34765/resources.tgz; \
+# 		tar -xvf resources.tgz || zcat resources.tgz | zcat | tar -xvf -; \
+# 	fi
 	if [ ! -d "resources" ]; then \
-		wget https://cdn.intra.42.fr/document/document/34765/resources.tgz; \
-		tar -xvf resources.tgz || zcat resources.tgz | zcat | tar -xvf -; \
+		wget https://drive.google.com/file/d/1XzxqU4xciSvwcM4-2pJz2JLy8T6gl7lR resources.zip; \
+		unzip resources.zip; \
 	fi
 
 all: $(NAME)
@@ -29,6 +33,6 @@ clean:
 	rm -f $(OBJS)
 
 fclean: clean
-	rm -rf $(NAME) resources*
+	rm -rf $(NAME)
 
 re: fclean all

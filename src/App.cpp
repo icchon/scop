@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <map>
+#include <algorithm>
 
 App::App(const AppConfig& config)
     : _config(config),
@@ -17,7 +18,6 @@ App::App(const AppConfig& config)
     if (!_window.isOpen()) {
         throw std::runtime_error("Failed to create window");
     }
-    // Initialize scene with shaders and projection matrix
     _scene.init(_config.window_width, _config.window_height, 
                 _config.shader_vertex_path, _config.shader_fragment_path);
 
@@ -30,7 +30,6 @@ App::~App() {
 
 void App::loadAssets() {
     IParser* parser = new ObjParser();
-    std::map<std::string, std::shared_ptr<Mesh>> loadedMeshes;
     std::map<std::string, std::shared_ptr<Texture>> loadedTextures;
 
     if (!_config.skybox_path.empty()) {
@@ -43,26 +42,48 @@ void App::loadAssets() {
 
     for (const auto& obj_config : _config.objects) {
         try {
-            if (loadedMeshes.find(obj_config.path) == loadedMeshes.end()) {
-                ParsedData data = parser->parse(obj_config.path);
-                auto mesh = std::make_shared<Mesh>(data.vertices, data.indices);
-                mesh->normalize();
-                loadedMeshes[obj_config.path] = mesh;
+            ParsedData data = parser->parse(obj_config.path);
+            data.normalize();
+
+            std::string objDir = "";
+            size_t lastSlash = obj_config.path.find_last_of("/\\");
+            if (lastSlash != std::string::npos) {
+                objDir = obj_config.path.substr(0, lastSlash + 1);
             }
 
-            if (loadedTextures.find(obj_config.texture) == loadedTextures.end()) {
-                std::cout << "Loading texture: '" << obj_config.texture << "'" << std::endl;
-                loadedTextures[obj_config.texture] = std::make_shared<Texture>(obj_config.texture);
+            for (const auto& mData : data.meshes) {
+                auto mesh = std::make_shared<Mesh>(mData.vertices, mData.indices);
+
+                std::string texToLoad = obj_config.texture;
+                if (mData.material.has_texture) {
+                    std::string mtlTexPath = mData.material.texture_path;
+                    for (auto& c : mtlTexPath) if (c == '\\') c = '/';
+                    texToLoad = objDir + mtlTexPath;
+                }
+
+                if (loadedTextures.find(texToLoad) == loadedTextures.end()) {
+                    try {
+                        std::cout << "Loading texture: '" << texToLoad << "'" << std::endl;
+                        loadedTextures[texToLoad] = std::make_shared<Texture>(texToLoad);
+                    } catch (...) {
+                        std::cerr << "Failed to load texture: " << texToLoad << ", fallback." << std::endl;
+                        texToLoad = obj_config.texture;
+                        if (loadedTextures.find(texToLoad) == loadedTextures.end()) {
+                            loadedTextures[texToLoad] = std::make_shared<Texture>(texToLoad);
+                        }
+                    }
+                }
+
+                GameObject object(
+                    mesh,
+                    loadedTextures[texToLoad],
+                    obj_config.position,
+                    obj_config.rotation,
+                    obj_config.scale
+                );
+                object.material = mData.material;
+                _scene.addObject(object);
             }
-
-            _scene.addObject(GameObject(
-                loadedMeshes[obj_config.path],
-                loadedTextures[obj_config.texture],
-                obj_config.position,
-                obj_config.rotation,
-                obj_config.scale
-            ));
-
 
         } catch(const std::exception& e) {
             std::cerr << "Error loading object " << obj_config.path << ": " << e.what() << std::endl;
@@ -98,25 +119,16 @@ void App::processInput(float delta_time) {
     float yaw_offset = 0.0f;
     float pitch_offset = 0.0f;
     if(_window.getKey(GLFW_KEY_LEFT) == GLFW_PRESS)
-        yaw_offset -= ROTATION_SPEED * delta_time;
+        yaw_offset -= 40.0f * delta_time;
     if(_window.getKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
-        yaw_offset += ROTATION_SPEED * delta_time;
+        yaw_offset += 40.0f * delta_time;
     if(_window.getKey(GLFW_KEY_UP) == GLFW_PRESS)
-        pitch_offset += ROTATION_SPEED * delta_time;
+        pitch_offset += 40.0f * delta_time;
     if(_window.getKey(GLFW_KEY_DOWN) == GLFW_PRESS)
-        pitch_offset -= ROTATION_SPEED * delta_time;
+        pitch_offset -= 40.0f * delta_time;
     
     if (yaw_offset != 0.0f || pitch_offset != 0.0f) {
         _scene.getCamera().rotate(yaw_offset, pitch_offset);
-    }
-
-    // FOV制御
-    float current_fov = _scene.getFov();
-    if (_window.getKey(GLFW_KEY_Z) == GLFW_PRESS) {
-        _scene.setFov(current_fov - FOV_CHANGE_SPEED * delta_time);
-    }
-    if (_window.getKey(GLFW_KEY_X) == GLFW_PRESS) {
-        _scene.setFov(current_fov + FOV_CHANGE_SPEED * delta_time);
     }
 
     if(_window.getKey(GLFW_KEY_T) == GLFW_PRESS && _t_key_state == GLFW_RELEASE) {
@@ -125,7 +137,7 @@ void App::processInput(float delta_time) {
     _t_key_state = _window.getKey(GLFW_KEY_T);
 
     if(_window.getKey(GLFW_KEY_V) == GLFW_PRESS && _v_key_state == GLFW_RELEASE) {
-        _scene.setColorMode(1 - _scene.getColorMode());
+        _scene.setOpticalMode(1 - _scene.getOpticalMode());
     }
     _v_key_state = _window.getKey(GLFW_KEY_V);
 }
@@ -134,18 +146,18 @@ void App::update(float delta_time) {
     _scene.update(delta_time);
     float current_mix_factor = _scene.getTextureMixFactor();
     if (_texture_target_state == 1 && current_mix_factor < 1.0f) {
-        current_mix_factor += TRANSITION_SPEED * delta_time;
+        current_mix_factor += 2.0f * delta_time;
         if (current_mix_factor > 1.0f) current_mix_factor = 1.0f;
         _scene.setTextureMixFactor(current_mix_factor);
     } else if (_texture_target_state == 0 && current_mix_factor > 0.0f) {
-        current_mix_factor -= TRANSITION_SPEED * delta_time;
+        current_mix_factor -= 2.0f * delta_time;
         if (current_mix_factor < 0.0f) current_mix_factor = 0.0f;
         _scene.setTextureMixFactor(current_mix_factor);
     }
 }
 
 void App::render() {
-    _window.clear(0.5f, 0.5f, 0.0f, 1.0f);
+    _window.clear(0.15f, 0.15f, 0.15f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     _scene.render();
     _window.swapBuffers();

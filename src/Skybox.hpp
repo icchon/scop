@@ -11,6 +11,7 @@ public:
     ~Skybox();
 
     void draw(const Mat4& view, const Mat4& projection);
+    unsigned int getTextureID() const { return _cubemapTexture; }
     
 private:
     unsigned int _vao, _vbo;

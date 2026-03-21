@@ -4,9 +4,7 @@
 
 struct Vertex {
     GLfloat pos[3];
-    GLfloat color[3];       // Random face color
-    GLfloat normalColor[3]; // Color based on face normal (for V-key mode)
-    GLfloat normal[3];      // Actual normal vector for lighting
+    GLfloat normal[3];
     GLfloat texCoord[2];
 };
 
