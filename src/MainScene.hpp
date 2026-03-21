@@ -96,8 +96,9 @@ public:
     }
 
     void update(float delta_time) {
-        (void)delta_time;
-        // Rotation logic removed to be handled elsewhere if needed
+        for(auto& object: _objects){
+            object.update(delta_time);
+        }
     }
 
     Camera& getCamera() { return _camera; }

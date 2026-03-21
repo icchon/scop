@@ -54,23 +54,14 @@ void App::loadAssets() {
                 loadedTextures[obj_config.texture] = std::make_shared<Texture>(obj_config.texture);
             }
 
-            Mat4 model_matrix;
-            model_matrix = model_matrix.translate(obj_config.position);
-            
-            if (obj_config.rotation.z != 0.0f)
-                 model_matrix = model_matrix.rotate(obj_config.rotation.z * (M_PI / 180.0f), Vec3(0, 0, 1));
-            if (obj_config.rotation.y != 0.0f)
-                 model_matrix = model_matrix.rotate(obj_config.rotation.y * (M_PI / 180.0f), Vec3(0, 1, 0));
-            if (obj_config.rotation.x != 0.0f)
-                 model_matrix = model_matrix.rotate(obj_config.rotation.x * (M_PI / 180.0f), Vec3(1, 0, 0));
-
-            model_matrix = model_matrix.scale(obj_config.scale);
-
             _scene.addObject(GameObject(
                 loadedMeshes[obj_config.path],
                 loadedTextures[obj_config.texture],
-                model_matrix
+                obj_config.position,
+                obj_config.rotation,
+                obj_config.scale
             ));
+
 
         } catch(const std::exception& e) {
             std::cerr << "Error loading object " << obj_config.path << ": " << e.what() << std::endl;
