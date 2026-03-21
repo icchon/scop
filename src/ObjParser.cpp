@@ -1,4 +1,5 @@
 #include "ObjParser.hpp"
+#include "Vec3.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -6,6 +7,8 @@
 #include <unistd.h>
 #include <limits.h>
 #include <algorithm>
+#include <cstdlib> // For rand()
+#include <ctime>   // For time()
 
 struct ObjIndex {
     int v, vt, vn;
@@ -24,6 +27,13 @@ struct ObjIndexHasher {
 };
 
 ParsedData ObjParser::parse(const std::string& filepath) {
+    // Seed random for face colors if needed
+    static bool seeded = false;
+    if (!seeded) {
+        srand(static_cast<unsigned int>(time(NULL)));
+        seeded = true;
+    }
+
     char currentPath[PATH_MAX];
     if (getcwd(currentPath, sizeof(currentPath)) == nullptr) {
         throw std::runtime_error("Failed to get current working directory for obj parsing.");
@@ -49,7 +59,7 @@ ParsedData ObjParser::parse(const std::string& filepath) {
     std::vector<GLfloat> colors;
 
     ParsedData data;
-    std::unordered_map<ObjIndex, GLuint, ObjIndexHasher> uniqueVertices;
+    // uniqueVertices is removed to ensure each face has its own vertices with its own color
 
     std::string line;
     while (std::getline(file, line)) {
@@ -109,35 +119,65 @@ ParsedData ObjParser::parse(const std::string& filepath) {
                 faceIndices.push_back({v, vt, vn});
             }
 
+            // Generate a color for this face
+            GLfloat faceR = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
+            GLfloat faceG = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
+            GLfloat faceB = static_cast<GLfloat>(rand()) / static_cast<GLfloat>(RAND_MAX);
+
             for (size_t i = 1; i < faceIndices.size() - 1; ++i) {
                 ObjIndex triangle[3] = { faceIndices[0], faceIndices[i], faceIndices[i + 1] };
-                for (int j = 0; j < 3; ++j) {
-                    if (uniqueVertices.find(triangle[j]) == uniqueVertices.end()) {
-                        uniqueVertices[triangle[j]] = static_cast<GLuint>(data.vertices.size());
-                        Vertex vert;
-                        vert.pos[0] = positions[3 * triangle[j].v + 0];
-                        vert.pos[1] = positions[3 * triangle[j].v + 1];
-                        vert.pos[2] = positions[3 * triangle[j].v + 2];
-                        
-                        if (colors.size() > (size_t)(3 * triangle[j].v + 2)) {
-                            vert.color[0] = colors[3 * triangle[j].v + 0];
-                            vert.color[1] = colors[3 * triangle[j].v + 1];
-                            vert.color[2] = colors[3 * triangle[j].v + 2];
-                        } else {
-                            vert.color[0] = 0.5f; vert.color[1] = 0.5f; vert.color[2] = 0.5f; // Gray default
-                        }
+                
+                // Calculate face normal
+                Vec3 v0(positions[3 * triangle[0].v + 0], positions[3 * triangle[0].v + 1], positions[3 * triangle[0].v + 2]);
+                Vec3 v1(positions[3 * triangle[1].v + 0], positions[3 * triangle[1].v + 1], positions[3 * triangle[1].v + 2]);
+                Vec3 v2(positions[3 * triangle[2].v + 0], positions[3 * triangle[2].v + 1], positions[3 * triangle[2].v + 2]);
+                Vec3 normal = cross(v1 - v0, v2 - v0).normalized();
 
-                        if (triangle[j].vt >= 0 && texCoords.size() > (size_t)(2 * triangle[j].vt + 1)) {
-                            vert.texCoord[0] = texCoords[2 * triangle[j].vt + 0];
-                            vert.texCoord[1] = texCoords[2 * triangle[j].vt + 1];
-                        } else {
-                            // Simple planar projection as fallback
-                            vert.texCoord[0] = vert.pos[0];
-                            vert.texCoord[1] = vert.pos[1];
-                        }
-                        data.vertices.push_back(vert);
+                // Determine smooth color based on 6 orthogonal axes
+                GLfloat nCol[3];
+                float nx = normal.x;
+                float ny = normal.y;
+                float nz = normal.z;
+
+                nCol[0] = std::max(0.0f, nx) + std::max(0.0f, -ny) + std::max(0.0f, -nz);
+                nCol[1] = std::max(0.0f, -nx) + std::max(0.0f, ny) + std::max(0.0f, -nz);
+                nCol[2] = std::max(0.0f, -nx) + std::max(0.0f, -ny) + std::max(0.0f, nz);
+
+                // Normalize to ensure color components are within [0, 1]
+                float maxCol = std::max({nCol[0], nCol[1], nCol[2], 1.0f});
+                nCol[0] /= maxCol;
+                nCol[1] /= maxCol;
+                nCol[2] /= maxCol;
+
+                for (int j = 0; j < 3; ++j) {
+                    Vertex vert;
+                    vert.pos[0] = positions[3 * triangle[j].v + 0];
+                    vert.pos[1] = positions[3 * triangle[j].v + 1];
+                    vert.pos[2] = positions[3 * triangle[j].v + 2];
+                    
+                    // Assign normal-based color
+                    vert.normalColor[0] = nCol[0];
+                    vert.normalColor[1] = nCol[1];
+                    vert.normalColor[2] = nCol[2];
+
+                    // If the file has vertex colors, use them, otherwise use the face color
+                    if (colors.size() > (size_t)(3 * triangle[j].v + 2)) {
+                        vert.color[0] = colors[3 * triangle[j].v + 0];
+                        vert.color[1] = colors[3 * triangle[j].v + 1];
+                        vert.color[2] = colors[3 * triangle[j].v + 2];
+                    } else {
+                        vert.color[0] = faceR; vert.color[1] = faceG; vert.color[2] = faceB;
                     }
-                    data.indices.push_back(uniqueVertices[triangle[j]]);
+
+                    if (triangle[j].vt >= 0 && texCoords.size() > (size_t)(2 * triangle[j].vt + 1)) {
+                        vert.texCoord[0] = texCoords[2 * triangle[j].vt + 0];
+                        vert.texCoord[1] = texCoords[2 * triangle[j].vt + 1];
+                    } else {
+                        vert.texCoord[0] = vert.pos[0];
+                        vert.texCoord[1] = vert.pos[1];
+                    }
+                    data.indices.push_back(static_cast<GLuint>(data.vertices.size()));
+                    data.vertices.push_back(vert);
                 }
             }
         }

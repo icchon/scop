@@ -4,7 +4,8 @@
 
 struct Vertex {
     GLfloat pos[3];
-    GLfloat color[3];
+    GLfloat color[3];       // Random face color
+    GLfloat normalColor[3]; // Color based on face normal
     GLfloat texCoord[2];
 };
 

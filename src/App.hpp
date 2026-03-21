@@ -29,5 +29,6 @@ private:
     const float TRANSITION_SPEED = 2.0f;
     const float FOV_CHANGE_SPEED = 30.0f;
     int _t_key_state;
+    int _v_key_state;
     int _texture_target_state;
 };

@@ -11,6 +11,7 @@ App::App(const AppConfig& config)
       _scene(),
       _last_time(0.0),
       _t_key_state(GLFW_RELEASE),
+      _v_key_state(GLFW_RELEASE),
       _texture_target_state(1)
 {
     if (!_window.isOpen()) {
@@ -122,6 +123,11 @@ void App::processInput(float delta_time) {
         _texture_target_state = 1 - _texture_target_state;
     }
     _t_key_state = _window.getKey(GLFW_KEY_T);
+
+    if(_window.getKey(GLFW_KEY_V) == GLFW_PRESS && _v_key_state == GLFW_RELEASE) {
+        _scene.setColorMode(1 - _scene.getColorMode());
+    }
+    _v_key_state = _window.getKey(GLFW_KEY_V);
 }
 
 void App::update(float delta_time) {

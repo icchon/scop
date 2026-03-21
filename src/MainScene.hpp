@@ -21,7 +21,7 @@ class MainScene
 {
 public:
     MainScene()
-        : _mainShader(nullptr), _texture_mix_factor(1.0f), _fov(45.0f), _aspect_ratio(1.0f) {
+        : _mainShader(nullptr), _texture_mix_factor(1.0f), _fov(45.0f), _aspect_ratio(1.0f), _color_mode(0) {
     }
 
     ~MainScene() = default;
@@ -80,6 +80,7 @@ public:
         _mainShader->use();
         _mainShader->setInt("u_Texture", 0);
         _mainShader->setFloat("u_TextureMixFactor", _texture_mix_factor);
+        _mainShader->setInt("u_ColorMode", _color_mode);
         
         Mat4 viewMatrix = _camera.getViewMatrix();
         
@@ -105,6 +106,9 @@ public:
     void setTextureMixFactor(float factor) { _texture_mix_factor = factor; }
     float getTextureMixFactor() const { return _texture_mix_factor; }
 
+    void setColorMode(int mode) { _color_mode = mode; }
+    int getColorMode() const { return _color_mode; }
+
     void setFov(float newFov) {
         if (newFov < 1.0f) newFov = 1.0f;
         if (newFov > 90.0f) newFov = 90.0f;
@@ -126,4 +130,5 @@ private:
     float _fov;
     float _aspect_ratio;
     std::unique_ptr<Skybox> _skybox;
+    int _color_mode; // 0: random, 1: normal-based
 };
