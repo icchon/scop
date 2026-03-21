@@ -206,6 +206,7 @@ void App::processInput(float delta_time) {
             for (auto& obj : _scene.getObjects()) {
                 if (obj.groupId == pid) {
                     obj.position += right * (dx * sensitivity) - up * (dy * sensitivity);
+                    obj.velocity = Vec3(0, 0, 0); // Reset velocity while dragging
                 }
             }
         }

@@ -3,7 +3,7 @@
 #include <cmath>
 
 Camera::Camera() 
-    : pos(0.0f, 0.0f, 5.0f), 
+    : pos(0.0f, 0.0f, 10.0f), 
       front(0.0f, 0.0f, -1.0f), 
       up(0.0f, 1.0f, 0.0f),
       _yaw(-90.0f),

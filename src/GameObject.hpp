@@ -16,7 +16,7 @@ class GameObject {
 public:
     GameObject(std::shared_ptr<Mesh> m, std::shared_ptr<Texture> t, 
                Vec3 pos, Vec3 rot, float s)
-        : mesh(m), texture(t), position(pos), initial_rotation(rot), scale(s), auto_rotation_y(0.0f) {
+        : mesh(m), texture(t), position(pos), velocity(0, 0, 0), initial_rotation(rot), scale(s), auto_rotation_y(0.0f) {
         calculateBoundingBox();
         updateModelMatrix();
     };
@@ -70,8 +70,35 @@ public:
     }
 
     void update(float delta_time) {
-        auto_rotation_y -= 30.0f * delta_time;
-        if (auto_rotation_y < -360.0f) auto_rotation_y += 360.0f;
+        if (groupId != -1) {
+            // Apply Gravity
+            const float gravity = -9.8f;
+            velocity.y += gravity * delta_time;
+
+            // Update Position by Velocity
+            position += velocity * delta_time;
+
+            // Ground Collision (y=0) with Bouncing
+            float bottom_y = position.y + min_local.y * scale;
+            if (bottom_y < 0.0f) {
+                position.y = -min_local.y * scale; 
+                
+                // Bounce: reverse velocity and apply restitution
+                const float restitution = 0.5f;
+                if (std::abs(velocity.y) > 0.5f) {
+                    velocity.y = -velocity.y * restitution;
+                } else {
+                    velocity.y = 0.0f; // Stop small bounces
+                }
+
+                // Friction for horizontal movement
+                velocity.x *= 0.8f;
+                velocity.z *= 0.8f;
+            }
+
+            auto_rotation_y -= 30.0f * delta_time;
+            if (auto_rotation_y < -360.0f) auto_rotation_y += 360.0f;
+        }
         updateModelMatrix();
     }
 
@@ -92,6 +119,7 @@ public:
     
     int groupId;
     Vec3 position;
+    Vec3 velocity;
     Vec3 initial_rotation;
     float scale;
     float auto_rotation_y;
