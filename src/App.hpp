@@ -18,6 +18,7 @@ private:
     void update(float delta_time);
     void render();
     void loadAssets();
+    Vec3 getRayFromMouse(double mouse_x, double mouse_y);
 
     AppConfig _config;
     Window _window;
@@ -28,4 +29,8 @@ private:
     int _t_key_state;
     int _v_key_state;
     int _texture_target_state;
+
+    bool _is_dragging;
+    GameObject* _picked_object;
+    double _last_mouse_x, _last_mouse_y;
 };

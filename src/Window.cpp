@@ -86,6 +86,23 @@ int Window::getKey(int key) const
     return -1;
 }
 
+void Window::getMousePos(double* x, double* y) const
+{
+    if (_window)
+    {
+        glfwGetCursorPos(_window, x, y);
+    }
+}
+
+int Window::getMouseButton(int button) const
+{
+    if (_window)
+    {
+        return glfwGetMouseButton(_window, button);
+    }
+    return -1;
+}
+
 void Window::clear(float r, float g, float b, float a) const
 {
     glClearColor(r, g, b, a);

@@ -11,6 +11,8 @@ public:
     void pollEvents() const;
     void swapBuffers() const;
     int getKey(int key) const;
+    void getMousePos(double* x, double* y) const;
+    int getMouseButton(int button) const;
     void clear(float r, float g, float b, float a) const;
     
 private:

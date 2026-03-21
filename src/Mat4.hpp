@@ -48,6 +48,7 @@ public:
     Mat4 scale(const Vec3& s) const;
     Mat4 rotate(float angle, const Vec3& axis) const;
     Mat4 perspective(float fov, float aspect, float near, float far) const;
+    Mat4 inverse() const;
     static Mat4 zero();
     static Mat4 lookAt(const Vec3& position, const Vec3& target, const Vec3& worldUp);
 };

@@ -127,6 +127,8 @@ public:
     }
 
     Camera& getCamera() { return _camera; }
+    std::vector<GameObject>& getObjects() { return _objects; }
+    Mat4 getProjectionMatrix() const { return _projection; }
     void setTextureMixFactor(float factor) { _texture_mix_factor = factor; }
     float getTextureMixFactor() const { return _texture_mix_factor; }
 

@@ -17,6 +17,7 @@ public:
     void draw() const;
     void normalize();
     void updateBuffers();   
+    const std::vector<Vertex>& getVertices() const { return _vertices; }
 private:
     GLuint _VAO, _VBO, _EBO;
     std::vector<Vertex> _vertices;
